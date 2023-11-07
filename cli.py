@@ -1,3 +1,43 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models import Base, Student, Course, Registration
+import argparse
+
+#A command-line parser
+parser = argparse.ArgumentParser(description="Student Registration System")
+
+subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+# Subcommand to add a new student
+add_student_parser = subparsers.add_parser("add_student", help="Add a new student")
+add_student_parser.add_argument("--sn", type=int, required=True, help="Student number")
+add_student_parser.add_argument("--first", required=True, help="First name")
+add_student_parser.add_argument("--last", required=True, help="Last name")
+add_student_parser.add_argument("--gender", choices=["m", "f"], required=True, help="Gender (m/f)")
+add_student_parser.add_argument("--age", type=int, required=True, help="Age")
+
+# Subcommand to add a new course
+add_course_parser = subparsers.add_parser("add_course", help="Add a new course")
+add_course_parser.add_argument("--description", required=True, help="Course description")
+
+# Subcommand to register a student for a course
+register_parser = subparsers.add_parser("register", help="Register a student for a course")
+register_parser.add_argument("--student_id", type=int, required=True, help="Student ID")
+register_parser.add_argument("--course_id", type=int, required=True, help="Course ID")
+
+# Subcommand to list all students
+list_students_parser = subparsers.add_parser("list_students", help="List all students")
+
+# Subcommand to list all courses
+list_courses_parser = subparsers.add_parser("list_courses", help="List all courses")
+
+# Subcommand to list student registrations
+list_registrations_parser = subparsers.add_parser("list_registrations", help="List student registrations")
+list_registrations_parser.add_argument("--student_id", type=int, required=True, help="Student ID")
+
+args = parser.parse_args()
+
+#Existing code for defining models, creating the database, and initializing the session
 from sqlalchemy import create_engine, Column, Integer, String, CHAR, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -117,3 +157,48 @@ for course, registration in results:
     for student in course.registrations:
         print(f"{student.student.firstname} {student.student.lastname} ({student.student.gender}, {student.student.age} years old)")
     print("")
+
+# Functions to handle the subcommands
+if args.command == "add_student":
+    student = Student(args.sn, args.first, args.last, args.gender, args.age)
+    session.add(student)
+    session.commit()
+    print("Student added successfully!")
+
+elif args.command == "add_course":
+    course = Course(args.description)
+    session.add(course)
+    session.commit()
+    print("Course added successfully!")
+
+elif args.command == "register":
+    registration = Registration(args.student_id, args.course_id)
+    session.add(registration)
+    session.commit()
+    print("Registration completed!")
+
+elif args.command == "list_students":
+    students = session.query(Student).all()
+    for student in students:
+        print(f"Student: {student.firstname} {student.lastname} ({student.gender}, {student.age} years old)")
+
+elif args.command == "list_courses":
+    courses = session.query(Course).all()
+    for course in courses:
+        print(f"Course: {course.description}")
+
+elif args.command == "list_registrations":
+    student_id = args.student_id
+    student = session.query(Student).filter_by(sn=student_id).first()
+    if student:
+        registrations = student.registrations
+        for registration in registrations:
+            print(f"Course: {registration.course.description}")
+    else:
+        print(f"No student found with ID {student_id}")
+
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+

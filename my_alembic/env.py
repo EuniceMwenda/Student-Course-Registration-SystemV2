@@ -4,9 +4,19 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-
-from alembic import context
 from models import Base  
+from sqlalchemy import create_engine
+
+engine = create_engine("sqlite:///mydb.db")  
+
+connection = engine.connect()
+context.configure(
+    connection=connection,
+    target_metadata=Base.metadata,  
+)
+
+with context.begin_transaction():
+    context.run_migrations()
 
 # This line is important for Alembic to recognize your models
 target_metadata = Base.metadata
