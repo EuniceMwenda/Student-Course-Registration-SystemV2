@@ -26,13 +26,12 @@ class Student(Base):
 
 class Course(Base):
     __tablename__ = 'courses'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     description = Column(String)
 
     registrations = relationship("Registration", back_populates="course")
 
-    def __init__(self, id, description):
-        self.id = id
+    def __init__(self, description):
         self.description = description
 
     def __repr__(self):
@@ -60,26 +59,27 @@ Base.metadata.create_all(bind=engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-student = Student(1234, "Sandra", "Smith", "f", 20)
-session.add(student)
-session.commit()
+# student = Student(1234, "Sandra", "Smith", "f", 20)
+# session.add(student)
+# session.commit()
 
-st1 = Student(1657, "Billy", "Lake", "m", 23)
-st2 = Student(1084, "Lisa", "Mwangi", "f", 21)
-st3 = Student(1534, "Luke", "Matt", "m", 24)
+# st1 = Student(1657, "Billy", "Lake", "m", 23)
+# st2 = Student(1084, "Lisa", "Mwangi", "f", 21)
+# st3 = Student(1534, "Luke", "Matt", "m", 24)
 
-session.add(st1)
-session.add(st2)
-session.add(st3)
-session.commit()
+# session.add(st1)
+# session.add(st2)
+# session.add(st3)
+# session.commit()
 
-course = Course(21, "Computer Science")
+course = Course( "Computer Science")
 session.add(course)
 session.commit()
 
-C1 = Course(23, "Pharmacy")
-C2 = Course(24, "Data Science")
-C3 = Course(25, "Economics")
+C1 = Course("Pharmacy")
+C2 = Course("Macine Learning")
+C3 = Course("Economics")
+
 
 session.add(C1)
 session.add(C2)
@@ -90,5 +90,29 @@ registration = Registration(1657, 23)
 session.add(registration)
 session.commit()
 
-results = session.query(Registration).all()
-print(results)
+reg1 = Registration(1084,  25)
+reg2 = Registration(1534,  24)
+
+session.add(reg1)
+session.add(reg2)
+session.commit()
+
+
+results = session.query(Student, Registration).join(Registration).all()
+
+# Iterate through the results and print student information along with the associated courses
+for student, registration in results:
+    print(f"Student: {student.firstname} {student.lastname} ({student.gender}, {student.age} years old)")
+    print(f"Course: {registration.course.description}")
+    print("")
+
+# Query all courses and their associated students
+results = session.query(Course, Registration).join(Registration).all()
+
+# Iterate through the results and print course information along with the associated students
+for course, registration in results:
+    print(f"Course: {course.description}")
+    print("Students:")
+    for student in course.registrations:
+        print(f"{student.student.firstname} {student.student.lastname} ({student.student.gender}, {student.student.age} years old)")
+    print("")
